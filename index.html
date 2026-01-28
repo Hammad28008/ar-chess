@@ -1,35 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AR Chess - Live Camera</title>
-    <!-- A-Frame library for 3D -->
+    <!-- Use the correct AR.js version -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <!-- AR.js for camera tracking -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <style>
-        /* Fullscreen AR view */
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
             overflow: hidden;
+            width: 100%;
+            height: 100%;
         }
         
-        /* Loading message */
-        .loading {
+        .arjs-loader {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
-            font-size: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
+            font-family: Arial, sans-serif;
         }
         
-        /* Instructions */
+        .arjs-loader h1 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
         .instructions {
             position: absolute;
             bottom: 20px;
@@ -37,128 +50,154 @@
             right: 0;
             text-align: center;
             color: white;
-            font-size: 18px;
-            z-index: 1000;
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            font-size: 16px;
+            z-index: 999;
+            font-family: Arial, sans-serif;
+        }
+        
+        .ar-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .ar-button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <!-- Loading message -->
-    <div class="loading" id="loading">
-        Loading AR Camera... Please allow camera access
+    <!-- Loading Screen -->
+    <div class="arjs-loader">
+        <h1>Loading AR Chess Experience...</h1>
+        <p>Please wait while we set up your camera</p>
+        <p>When prompted, click "Allow" to enable camera access</p>
+        <button class="ar-button" onclick="startAR()">Start AR Experience</button>
     </div>
     
     <!-- Instructions -->
-    <div class="instructions">
-        Point camera at a flat surface. Tap to place chess board.
+    <div class="instructions" style="display: none;">
+        👉 Point your camera at a flat surface<br>
+        👉 Move your device slowly to detect the surface<br>
+        👉 Tap the chess piece to rotate it
     </div>
     
-    <!-- A-Frame AR Scene -->
+    <!-- A-Frame Scene -->
     <a-scene 
         vr-mode-ui="enabled: false" 
         embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false;"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+        renderer="logarithmicDepthBuffer: true;"
     >
-        <!-- AR Marker - This adds camera and AR capabilities -->
+        <!-- Camera Setup -->
         <a-entity camera></a-entity>
         
-        <!-- Your 3D Cube (will replace with chess later) -->
-        <a-box 
-            id="myCube"
-            position="0 0.5 -2" 
-            rotation="0 45 0"
-            color="#FF5733"
-            depth="0.5"
-            height="0.5"
-            width="0.5"
-            shader="flat"
+        <!-- Simple AR Marker for Surface Detection -->
+        <a-nft
+            type="nft"
+            url="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/trex-image/trex"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance=".01"
+            smoothThreshold="5"
         >
-            <!-- Text label above cube -->
-            <a-text 
-                value="Future Chess Board" 
-                position="0 1 0" 
-                color="#FFFFFF"
-                align="center"
-                width="3"
-            ></a-text>
-            
-            <!-- Small instruction text -->
-            <a-text 
-                value="Tap me to rotate!" 
-                position="0 -0.8 0" 
-                color="#00FF00"
-                align="center"
-                width="2"
-                scale="0.5 0.5 0.5"
-            ></a-text>
-        </a-box>
+            <!-- Your 3D Cube (Future Chess Piece) -->
+            <a-box 
+                id="chess-piece"
+                position="0 0.3 0"
+                rotation="0 45 0"
+                color="#FF5733"
+                depth="0.3"
+                height="0.3"
+                width="0.3"
+                shader="standard"
+                metalness="0.5"
+                roughness="0.5"
+            >
+                <!-- Label -->
+                <a-text 
+                    value="Chess King"
+                    position="0 0.5 0"
+                    color="#FFFFFF"
+                    align="center"
+                    width="2"
+                ></a-text>
+            </a-box>
+        </a-nft>
         
-        <!-- Simple floor for reference -->
-        <a-plane 
-            position="0 0 -4" 
-            rotation="-90 0 0" 
-            width="4" 
-            height="4" 
-            color="#7BC8A4"
-            opacity="0.5"
-        ></a-plane>
-        
-        <!-- Light source so we can see the cube -->
-        <a-light type="ambient" color="#FFFFFF"></a-light>
-        <a-light type="directional" position="2 5 3" intensity="0.8"></a-light>
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #CCC; intensity: 0.8"></a-entity>
+        <a-entity light="type: directional; color: #FFF; intensity: 0.5; position: 0 1 1"></a-entity>
     </a-scene>
     
-    <!-- JavaScript for interaction -->
     <script>
-        // Wait for everything to load
+        // Hide loader and show instructions when AR is ready
+        function startAR() {
+            document.querySelector('.arjs-loader').style.display = 'none';
+            document.querySelector('.instructions').style.display = 'block';
+            
+            // Manually trigger camera access
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        console.log("Camera access granted!");
+                    })
+                    .catch(function(error) {
+                        alert("Camera access denied. Please refresh and allow camera access.");
+                        console.error("Camera error:", error);
+                    });
+            }
+        }
+        
+        // Auto-start AR on page load (after 1 sec)
         window.addEventListener('load', function() {
-            // Hide loading message after 2 seconds
+            setTimeout(startAR, 1000);
+        });
+        
+        // Make the cube interactive
+        document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
-                document.getElementById('loading').style.display = 'none';
+                var cube = document.querySelector('#chess-piece');
+                if (cube) {
+                    cube.addEventListener('click', function() {
+                        var currentRotation = this.getAttribute('rotation');
+                        this.setAttribute('rotation', {
+                            x: currentRotation.x,
+                            y: currentRotation.y + 90,
+                            z: currentRotation.z
+                        });
+                        
+                        // Visual feedback
+                        var colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3'];
+                        this.setAttribute('color', colors[Math.floor(Math.random() * colors.length)]);
+                    });
+                    
+                    // Add hover effect for desktop
+                    cube.addEventListener('mouseenter', function() {
+                        this.setAttribute('scale', '1.1 1.1 1.1');
+                    });
+                    
+                    cube.addEventListener('mouseleave', function() {
+                        this.setAttribute('scale', '1 1 1');
+                    });
+                }
             }, 2000);
-            
-            // Get the cube element
-            var cube = document.getElementById('myCube');
-            
-            // Make cube clickable/tappable
-            cube.addEventListener('click', function() {
-                // Get current rotation
-                var currentRotation = cube.getAttribute('rotation');
-                
-                // Rotate 90 degrees on Y axis
-                cube.setAttribute('rotation', {
-                    x: currentRotation.x,
-                    y: currentRotation.y + 90,
-                    z: currentRotation.z
-                });
-                
-                // Change color for feedback
-                var colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33'];
-                var randomColor = colors[Math.floor(Math.random() * colors.length)];
-                cube.setAttribute('color', randomColor);
-            });
-            
-            // Add mouse hover effect (for desktop testing)
-            cube.addEventListener('mouseenter', function() {
-                cube.setAttribute('scale', '1.1 1.1 1.1');
-            });
-            
-            cube.addEventListener('mouseleave', function() {
-                cube.setAttribute('scale', '1 1 1');
-            });
-            
-            // Camera permission check
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    console.log("Camera access granted");
-                })
-                .catch(function(err) {
-                    document.getElementById('loading').innerHTML = 
-                        "Camera access denied. Please allow camera to use AR.<br>" +
-                        "Refresh page and click 'Allow' when prompted.";
-                });
+        });
+        
+        // Handle errors
+        window.addEventListener('arjs-nft-loaded', function(ev) {
+            console.log('AR marker loaded successfully');
+        });
+        
+        window.addEventListener('arjs-video-loaded', function(ev) {
+            console.log('AR video loaded successfully');
         });
     </script>
 </body>
