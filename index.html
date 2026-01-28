@@ -3,30 +3,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Chess Board</title>
-    
-    <!-- SIMPLER: Use only basic A-Frame without complex AR.js -->
+    <title>AR Chess with Camera</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <!-- We'll use A-Frame's built-in camera instead of AR.js -->
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
+        * { margin: 0; padding: 0; overflow: hidden; }
         
         #startScreen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
             color: white;
             display: flex;
             flex-direction: column;
@@ -34,339 +21,137 @@
             align-items: center;
             z-index: 1000;
             text-align: center;
-            padding: 20px;
         }
         
-        #startScreen h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        
-        #startScreen p {
-            margin-bottom: 30px;
-            font-size: 1.1em;
-            max-width: 500px;
-            line-height: 1.5;
-        }
-        
-        #arButton {
-            background-color: white;
-            color: #667eea;
+        #startButton {
+            background: #4CAF50;
+            color: white;
             border: none;
             padding: 15px 30px;
-            font-size: 1.2em;
+            font-size: 18px;
             border-radius: 50px;
+            margin-top: 20px;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
         }
         
-        #arButton:hover {
-            transform: scale(1.05);
-        }
-        
-        #arButton:active {
-            transform: scale(0.95);
-        }
-        
-        #infoPanel {
+        #status {
             position: absolute;
             bottom: 20px;
-            left: 0;
-            right: 0;
+            left: 0; right: 0;
             text-align: center;
             color: white;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            font-size: 16px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
             z-index: 999;
-            display: none;
-        }
-        
-        .hidden {
-            display: none !important;
         }
     </style>
 </head>
 <body>
-    <!-- Start Screen -->
     <div id="startScreen">
-        <h1>♟️ AR Chess Experience</h1>
-        <p>View a 3D chess board in your space using your camera.</p>
-        <p>Click START below, then point your camera at any flat surface like a table or floor.</p>
-        <button id="arButton">🎬 START AR EXPERIENCE</button>
-        <p style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
-            Works on Android (Chrome) and iPhone (Safari)<br>
-            Camera permission required
-        </p>
+        <h1>AR Chess</h1>
+        <p>Click below to start camera and view chess pieces</p>
+        <button id="startButton">START CAMERA</button>
     </div>
     
-    <!-- Info Panel -->
-    <div id="infoPanel">
-        👉 Tap chess pieces to rotate them &nbsp;|&nbsp;
-        👉 Move device to view from different angles
-    </div>
+    <div id="status">Waiting for camera...</div>
     
-    <!-- A-Frame Scene -->
-    <a-scene 
-        vr-mode-ui="enabled: false"
-        embedded
-        xr="required: local-floor; optional: unbounded"
-        renderer="colorManagement: true;"
-    >
-        <!-- Camera with user's actual camera feed -->
-        <a-entity id="cameraRig" position="0 1.6 0">
-            <a-camera id="camera" user-height="0" wasd-controls="enabled: false"></a-camera>
+    <!-- A-FRAME SCENE -->
+    <a-scene vr-mode-ui="enabled: false" embedded>
+        <!-- Camera feed as background -->
+        <a-entity id="cameraBackground"></a-entity>
+        
+        <!-- Chess pieces positioned closer to camera -->
+        <a-entity position="0 0 -2">
+            <!-- Chess Board -->
+            <a-box position="0 -0.5 0" width="1.5" height="0.1" depth="1.5" color="#8B4513"></a-box>
+            
+            <!-- White Pieces -->
+            <a-cylinder position="-0.5 0.2 0.5" radius="0.08" height="0.4" color="white"></a-cylinder>
+            <a-cylinder position="-0.5 0.2 -0.5" radius="0.08" height="0.4" color="white"></a-cylinder>
+            <a-sphere position="-0.2 0.15 0.2" radius="0.06" color="white"></a-sphere>
+            
+            <!-- Black Pieces -->
+            <a-cylinder position="0.5 0.2 0.5" radius="0.08" height="0.4" color="black"></a-cylinder>
+            <a-cylinder position="0.5 0.2 -0.5" radius="0.08" height="0.4" color="black"></a-cylinder>
+            <a-sphere position="0.2 0.15 0.2" radius="0.06" color="black"></a-sphere>
         </a-entity>
         
-        <!-- Your Chess Pieces -->
-        <a-entity id="chessSet">
-            <!-- Chess Board Base -->
-            <a-plane 
-                id="chessBoard"
-                position="0 0 -2"
-                rotation="-90 0 0"
-                width="2"
-                height="2"
-                color="#8B4513"
-                shadow
-            ></a-plane>
-            
-            <!-- Board Squares -->
-            <a-plane 
-                position="-0.75 0.01 -1.25"
-                rotation="-90 0 0"
-                width="0.5"
-                height="0.5"
-                color="#F0D9B5"
-            ></a-plane>
-            <a-plane 
-                position="-0.25 0.01 -1.25"
-                rotation="-90 0 0"
-                width="0.5"
-                height="0.5"
-                color="#B58863"
-            ></a-plane>
-            
-            <!-- Chess Pieces (Simplified) -->
-            <!-- White King -->
-            <a-cylinder 
-                id="whiteKing"
-                position="-0.5 0.3 -1.5"
-                radius="0.15"
-                height="0.6"
-                color="#FFFFFF"
-                metalness="0.3"
-                roughness="0.7"
-            >
-                <a-text 
-                    value="♔"
-                    position="0 0.5 0.1"
-                    align="center"
-                    color="#000000"
-                    width="0.5"
-                ></a-text>
-            </a-cylinder>
-            
-            <!-- Black King -->
-            <a-cylinder 
-                id="blackKing"
-                position="0.5 0.3 -1.5"
-                radius="0.15"
-                height="0.6"
-                color="#333333"
-                metalness="0.5"
-                roughness="0.3"
-            >
-                <a-text 
-                    value="♚"
-                    position="0 0.5 0.1"
-                    align="center"
-                    color="#FFFFFF"
-                    width="0.5"
-                ></a-text>
-            </a-cylinder>
-            
-            <!-- White Pawn -->
-            <a-sphere 
-                id="whitePawn"
-                position="-0.8 0.2 -0.8"
-                radius="0.12"
-                color="#FFFFFF"
-                metalness="0.2"
-            ></a-sphere>
-            
-            <!-- Black Pawn -->
-            <a-sphere 
-                id="blackPawn"
-                position="0.8 0.2 -0.8"
-                radius="0.12"
-                color="#333333"
-                metalness="0.4"
-            ></a-sphere>
-        </a-entity>
-        
-        <!-- Lighting -->
-        <a-entity light="type: ambient; color: #888; intensity: 0.6"></a-entity>
-        <a-entity light="type: directional; color: #FFF; intensity: 0.8; position: 2 5 3" shadow></a-entity>
-        <a-entity light="type: point; color: #FFE; intensity: 0.5; position: 0 3 -1" distance="10"></a-entity>
-        
-        <!-- Environment -->
-        <a-sky color="#87CEEB"></a-sky>
-        <a-entity geometry="primitive: plane; height: 100; width: 100" rotation="-90 0 0" material="color: #228B22" position="0 -0.1 0"></a-entity>
+        <!-- Camera -->
+        <a-entity camera look-controls wasd-controls="enabled: false"></a-entity>
     </a-scene>
     
     <script>
-        // Get DOM elements
+        // Get elements
         const startScreen = document.getElementById('startScreen');
-        const arButton = document.getElementById('arButton');
-        const infoPanel = document.getElementById('infoPanel');
+        const startButton = document.getElementById('startButton');
+        const status = document.getElementById('status');
         const scene = document.querySelector('a-scene');
         
-        // Function to start AR experience
-        async function startAR() {
-            try {
-                // Request camera access
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: { ideal: 'environment' } } 
-                });
-                
-                console.log("Camera access granted!");
-                
-                // Hide start screen
-                startScreen.classList.add('hidden');
-                infoPanel.style.display = 'block';
-                
-                // Set up camera feed as background (simulated AR)
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.setAttribute('autoplay', '');
-                video.setAttribute('playsinline', '');
-                video.style.position = 'absolute';
-                video.style.top = '0';
-                video.style.left = '0';
-                video.style.width = '100%';
-                video.style.height = '100%';
-                video.style.objectFit = 'cover';
-                video.style.zIndex = '-1';
-                document.body.appendChild(video);
-                
-                // Start A-Frame scene
-                if (scene.hasLoaded) {
-                    scene.enterVR();
-                } else {
-                    scene.addEventListener('loaded', () => {
-                        setTimeout(() => scene.enterVR(), 500);
-                    });
-                }
-                
-                // Make chess pieces interactive
-                setupInteractions();
-                
-            } catch (error) {
-                console.error("Camera error:", error);
-                alert("Could not access camera. Please make sure you've allowed camera permissions and try again.");
-                startScreen.style.display = 'flex';
-            }
-        }
-        
-        // Set up click interactions for chess pieces
-        function setupInteractions() {
-            const pieces = ['whiteKing', 'blackKing', 'whitePawn', 'blackPawn'];
-            
-            pieces.forEach(pieceId => {
-                const piece = document.getElementById(pieceId);
-                if (piece) {
-                    piece.addEventListener('click', function() {
-                        // Rotate the piece
-                        const currentRotation = this.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
-                        this.setAttribute('rotation', {
-                            x: currentRotation.x,
-                            y: currentRotation.y + 90,
-                            z: currentRotation.z
+        // Camera feed component
+        AFRAME.registerComponent('camera-background', {
+            init: function() {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        // Create video element
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.autoplay = true;
+                        video.playsInline = true;
+                        
+                        // Set as scene background
+                        scene.setAttribute('background', { src: video });
+                        
+                        // Hide start screen
+                        startScreen.style.display = 'none';
+                        status.textContent = "✅ Camera active! Look around and tap pieces.";
+                        
+                        // Make pieces clickable
+                        document.querySelectorAll('a-cylinder, a-sphere').forEach(piece => {
+                            piece.addEventListener('click', function() {
+                                const rotation = this.getAttribute('rotation') || {x:0, y:0, z:0};
+                                this.setAttribute('rotation', {
+                                    x: rotation.x,
+                                    y: rotation.y + 90,
+                                    z: rotation.z
+                                });
+                                
+                                // Visual feedback
+                                const originalColor = this.getAttribute('color');
+                                this.setAttribute('color', 'red');
+                                setTimeout(() => {
+                                    this.setAttribute('color', originalColor);
+                                }, 200);
+                            });
                         });
-                        
-                        // Visual feedback
-                        const originalColor = this.getAttribute('color');
-                        this.setAttribute('color', '#FFD700'); // Gold highlight
-                        
-                        setTimeout(() => {
-                            this.setAttribute('color', originalColor);
-                        }, 300);
-                        
-                        // Click sound effect (optional)
-                        const clickSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3');
-                        clickSound.volume = 0.3;
-                        clickSound.play().catch(e => console.log("Sound play failed:", e));
+                    })
+                    .catch(err => {
+                        status.textContent = "❌ Camera error: " + err.message;
+                        status.style.color = "red";
                     });
-                    
-                    // Add hover effects for desktop
-                    piece.addEventListener('mouseenter', function() {
-                        this.setAttribute('scale', '1.1 1.1 1.1');
-                    });
-                    
-                    piece.addEventListener('mouseleave', function() {
-                        this.setAttribute('scale', '1 1 1');
-                    });
-                }
-            });
-            
-            // Make the chess board draggable (optional)
-            const chessBoard = document.getElementById('chessBoard');
-            if (chessBoard) {
-                let isDragging = false;
-                let startX, startZ;
-                
-                chessBoard.addEventListener('mousedown', function(e) {
-                    isDragging = true;
-                    const position = this.getAttribute('position');
-                    startX = position.x;
-                    startZ = position.z;
-                });
-                
-                document.addEventListener('mousemove', function(e) {
-                    if (!isDragging) return;
-                    
-                    const moveX = e.movementX * 0.01;
-                    const moveZ = e.movementY * 0.01;
-                    
-                    chessBoard.setAttribute('position', {
-                        x: startX + moveX,
-                        y: chessBoard.getAttribute('position').y,
-                        z: startZ + moveZ
-                    });
-                });
-                
-                document.addEventListener('mouseup', function() {
-                    isDragging = false;
-                });
-            }
-        }
-        
-        // Event listeners
-        arButton.addEventListener('click', startAR);
-        
-        // Add keyboard shortcuts for testing
-        document.addEventListener('keydown', function(e) {
-            if (e.key === ' ') { // Space bar to start
-                startAR();
-            }
-            if (e.key === 'r' || e.key === 'R') { // R to reset view
-                const cameraRig = document.getElementById('cameraRig');
-                if (cameraRig) {
-                    cameraRig.setAttribute('position', '0 1.6 0');
-                    cameraRig.setAttribute('rotation', '0 0 0');
-                }
             }
         });
         
-        // Auto-start on mobile if in fullscreen mode
-        if ('ontouchstart' in window && window.innerWidth < 768) {
-            arButton.textContent = "TAP TO START AR";
-        }
+        // Start when button clicked
+        startButton.addEventListener('click', () => {
+            status.textContent = "Requesting camera access...";
+            
+            // Add camera background component
+            document.getElementById('cameraBackground').setAttribute('camera-background', '');
+            
+            // Enter VR mode for fullscreen
+            setTimeout(() => {
+                if (scene.enterVR) {
+                    scene.enterVR();
+                }
+            }, 1000);
+        });
         
-        console.log("AR Chess page loaded successfully!");
+        // Auto-start on mobile after 2 seconds
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                startButton.click();
+            }, 2000);
+        }
     </script>
 </body>
 </html>
